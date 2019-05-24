@@ -113,7 +113,7 @@
         ((#:pos) pos)
         (else (set! pos a))))))
 
-(define (parse-string-pool* here seek)
+(define (parse-string-pool here seek)
      
   (define start (+ (here) -2))
 
@@ -190,10 +190,8 @@
   ;;(prn "strings " strings)
   (prn "chunk end at " chunk-end)
   (seek chunk-end)
-  strings)
-
-(define (parse-string-pool here seek)
-  `(string-pool ,(if utf8? 'utf8 'utf16) ,(parse-string-pool* here seek)))
+  
+  `(string-pool ,(if utf8? 'utf8 'utf16) ,strings))
 
 (define (unparse-string-pool data)
 
