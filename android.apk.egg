@@ -2,7 +2,7 @@
 ((author "Kristian Lein-Mathisen")
  (synopsis "Simple tool to manipulate Android apk files")
  (license "MIT") ;; godot's licence terms
- (dependencies)
+ (dependencies srfi-1 srfi-69 matchable)
  ;;(category mobile)
  (components (extension android.apk
                         (source "apk-module.scm")
