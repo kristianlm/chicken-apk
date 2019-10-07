@@ -66,12 +66,12 @@ C_word edit_apk_file(C_word user, char* fname, char** data, uint64_t* size);
      `((string-pool ,utf_ ,(map replacing strings)) ,@rest))
     (else (error "invalid string-pool" sp))))
 
-(define (keep-file?/default file)
-  (if (eq? 0 (substring-index "META-INF/" file))
-      #f
-      #t))
+(define (discard-meta+lib file)
+  (cond ((eq? 0 (substring-index "META-INF/" file)) #f)
+        ((eq? 0 (substring-index "lib/" file)) #f)
+        (else #t)))
 
-(define (apk-repackage src dst renaming #!optional (keep-file? keep-file?/default))
+(define (apk-repackage src dst renaming #!optional (keep-file? discard-meta+lib))
   (rezip src dst
          (if (procedure? renaming) renaming
              (lambda (fname data)
