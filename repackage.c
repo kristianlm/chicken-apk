@@ -34,6 +34,25 @@ int string_prefixp(const char *str, const char *prefix)
     return lenstr < lenpre ? 0 : strncmp(prefix, str, lenpre) == 0;
 }
 
+int zipadd(zipFile unaligned_apk, char* fname) {
+  zip_fileinfo zipfi = get_zip_fileinfo();
+  zipOpenNewFileInZip(unaligned_apk, fname,
+                      &zipfi, NULL, 0, NULL, 0, NULL,
+                      0, Z_DEFAULT_COMPRESSION);
+
+  FILE *f = fopen(fname, "r");
+  if(!f) {
+    fprintf(stderr, "couldn't open '%s'\n", fname);
+    exit(-1);
+  }
+  char* buffer[1024];
+  int size;
+  while((size = fread(buffer, 1, 1024, f)) > 0) {
+    zipWriteInFileInZip(unaligned_apk, buffer, size);
+  }
+  zipCloseFileInZip(unaligned_apk);
+}
+
 int rezip(char* apk_src, char* apk_dst, C_word user) {
   fprintf(stderr, "########## rezipping '%s' => '%s'\n", apk_src, apk_dst);
 
@@ -80,27 +99,10 @@ int rezip(char* apk_src, char* apk_dst, C_word user) {
   }
   unzClose(pkg);
 
-  // ==================== adding custom files ====================
-  /* { */
-  /*   char* fname = "lib/arm64-v8a/libnative-lib.so"; */
-  /*   zip_fileinfo zipfi = get_zip_fileinfo(); */
-  /*   zipOpenNewFileInZip(unaligned_apk, fname, */
-  /*                       &zipfi, NULL, 0, NULL, 0, NULL, */
-  /*                       0, Z_DEFAULT_COMPRESSION); */
+  // // ==================== adding custom files ====================
 
-  /*   FILE *f = fopen(fname, "r"); */
-  /*   if(!f) { */
-  /*     fprintf(stderr, "couldn't open '%s'\n", fname); */
-  /*     exit(-1); */
-  /*   } */
-  /*   char* buffer[1024]; */
-  /*   int size; */
-  /*   while((size = fread(buffer, 1, 1024, f)) > 0) { */
-  /*     fprintf(stderr, "writing %d bytes ...\n", size); */
-  /*     zipWriteInFileInZip(unaligned_apk, buffer, size); */
-  /*   } */
-  /*   zipCloseFileInZip(unaligned_apk); */
-  /* } */
+  zipadd(unaligned_apk, "lib/x86/libchicken.so");
+  zipadd(unaligned_apk, "lib/x86/libnative-lib.so");
 
   zipClose(unaligned_apk, NULL);
   fprintf(stderr, "########## produced '%s'\n", apk_dst);
