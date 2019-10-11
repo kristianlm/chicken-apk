@@ -32,7 +32,9 @@
 (define (prn . args)
   (with-output-to-port (current-error-port)
     (lambda ()
-      (apply print (map (lambda (x) (if (number? x) (conc "#x" (number->string x 16)) x)) args)))))
+      (apply print (map (lambda (x) (cond ((number? x) (conc "#x" x))
+                                          ((string? x) (conc "\x1b32m" x "\x1b0m"))
+                                          (else x))) args)))))
 
 (define flag/utf8 #x100)
 
