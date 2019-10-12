@@ -28,4 +28,6 @@
                          "minizip/unzip.h"
                          "minizip/zip.c"
                          "minizip/zip.h")
-                        (link-options "-L" "-lz"))))
+                        (link-options "-L" "-lz"))
+             (program chicken-android
+                      (component-dependencies android.bxml android.minizip))))
