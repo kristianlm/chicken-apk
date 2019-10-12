@@ -1,5 +1,5 @@
 (import (only (chicken gc) set-finalizer!)
-        (only (chicken port) make-input-port port-for-each)
+        (only (chicken port) make-input-port port-for-each set-port-name!)
         (only (chicken string) conc)
 ;;        (only (chicken io) )
         srfi-4)
@@ -46,14 +46,17 @@
   (unzFile-first?-set! uz #t))
 
 (define (unzipper-port* uz)
-  (make-input-port (lambda ()
-                     (let* ((s (make-string 1))
-                            (read (unzipper-read! uz s 1)))
-                       (cond ((= read 0) #!eof)
-                             ((< read 0) (error "could not read from file" uz read))
-                             (else (string-ref s 0)))))
-                   (lambda () #t) ;; ready?
-                   (lambda () (unzipper-close! uz))))
+  (define port
+    (make-input-port (lambda ()
+                       (let* ((s (make-string 1))
+                              (read (unzipper-read! uz s 1)))
+                         (cond ((= read 0) #!eof)
+                               ((< read 0) (error "could not read from file" uz read))
+                               (else (string-ref s 0)))))
+                     (lambda () #t) ;; ready?
+                     (lambda () (unzipper-close! uz))))
+  (set-port-name! port (conc "unzipper " (unzipper-filename uz)))
+  port)
 
 (define (unzipper-next! uz #!optional (eof #f))
   (let ((ret (if (unzFile-first? uz)
@@ -97,4 +100,4 @@
                    (lambda () (unzipper-next! uz #!eof)))))
 
 (define-record-printer unzFile
-  (lambda (x p) (display (conc  "#<unzipper @ «" (unzipper-filename x) "»>") p)))
+  (lambda (x p) (display (conc  "#<unzipper>") p)))
