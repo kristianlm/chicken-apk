@@ -86,9 +86,10 @@
 ;; I'm tierd of seeing (str 4294967295)
 (define (str index) `(str ,(if (= index #xffffffff) #f index)))
 
-(define (string->ibax manifest)
+;; bxml is a string representation of android's binary xml
+(define (bxml->ibax bxml)
 
-  (define p (make-seekable-port manifest))
+  (define p (make-seekable-port bxml))
   (parameterize ((current-input-port (p #:port)))
 
     (define (seek byte-offset)
@@ -299,7 +300,7 @@
 
   (len (current-buffer-pos)))
 
-(define (ibax->string ibax)
+(define (ibax->bxml ibax)
   (wotb (lambda () (write-ibax ibax))))
 
 ;; turn ibax into nested sxml
@@ -400,5 +401,5 @@
           (resource-map ())
           ,@(reverse ibax)))))
 
-(define (sxml->bxml sxml) (ibax->string (sxml->ibax sxml)))
-(define (bxml->sxml bxml) (ibax->sxml (string->ibax bxml)))
+(define sxml->bxml (o ibax->bxml sxml->ibax))
+(define bxml->sxml (o ibax->sxml bxml->ibax))
