@@ -1,4 +1,4 @@
-(import test (android manifest) (only chicken.blob blob->string string->blob))
+(import test (android bxml) (only chicken.blob blob->string string->blob))
 
 
 (test-group
