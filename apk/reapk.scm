@@ -26,7 +26,7 @@ C_word edit_apk_file(C_word user, char* fname, char** data, uint64_t* size);
 #include \"minizip/ioapi.c\"
 #include \"minizip/zip.c\"
 #include \"minizip/unzip.c\"
-#include \"repackage.c\"
+#include \"apk/repackage.c\"
 ")
 
 (define-external

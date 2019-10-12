@@ -5,10 +5,10 @@
  (dependencies srfi-1 srfi-69 matchable)
  ;;(category mobile)
  (components (extension android.apk
-                        (source "apk-module.scm")
+                        (source "apk/android.apk-module.scm")
                         (source-dependencies
-                         "repackage.c"
-                         "reapk.scm" )
+                         "apk/repackage.c"
+                         "apk/reapk.scm" )
                         (link-options "-L" "-lz"))
              (extension android.bxml
                         (source "bxml/android.bxml-module.scm")

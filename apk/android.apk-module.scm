@@ -6,6 +6,6 @@
 (import scheme (chicken base))
 ;;(include "string-pool.scm")
 
-(include "reapk.scm")
+(include "apk/reapk.scm")
 
 )
