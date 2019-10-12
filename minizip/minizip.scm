@@ -96,7 +96,7 @@
 
 (define (unzip-walk path proc)
   (let ((uz (unzipper path)))
-    (port-for-each (lambda (p) (proc uz (unzipper-filename uz) p))
+    (port-for-each (lambda (port) (proc uz (unzipper-filename uz) port))
                    (lambda () (unzipper-next! uz #!eof)))))
 
 (define-record-printer unzFile
