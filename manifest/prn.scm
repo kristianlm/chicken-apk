@@ -20,3 +20,6 @@
       (P (car args))
       (apply P (cdr args))
       (newline))))
+
+;; uncomment to enable printing
+(define-syntax prn (syntax-rules () ((_ args ...) (begin))))
