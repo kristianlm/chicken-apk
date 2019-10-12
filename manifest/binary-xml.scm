@@ -50,7 +50,7 @@
 (import (only chicken.string conc)
         (only chicken.io read-string)
         (only matchable match match-lambda)
-        (only srfi-1 list-tabulate unfold))
+        (only srfi-1 unfold))
 
 ;; OBS: we need buffer.scm and friends
 
@@ -162,19 +162,19 @@
                (define element
                  `(<element>
                    ,(str ns) ,(str tag)
-                   (@ ,@(reverse
-                         (list-tabulate
-                          att-count
-                          (lambda (i)
-                            (define att-ns (read-uint32)) (prn "    att-ns " att-ns)
-                            (define att-name (read-uint32)) ;;(prn "  att-name " (sp-ref att-name))
-                            (define att-raw-value (read-uint32))
-                            (expect #x08 (read-uint16) "attribute value size ≠ #x08")
-                            (expect 0 (read-byte) "res0 ≠ 0")
-                            (define att-type (read-byte)) (prn "    att-type " att-type)
-                            (define att-value (decode-value (read-uint32) att-type))
-                            (prn "    ## " att-name "=" att-value)
-                            `(,(str att-name) ,att-value)))))))
+                   (@ ,@(unfold
+                         (lambda (x) (>= x att-count))
+                         (lambda (i)
+                           (define att-ns (read-uint32)) (prn "    att-ns " att-ns)
+                           (define att-name (read-uint32)) ;;(prn "  att-name " (sp-ref att-name))
+                           (define att-raw-value (read-uint32))
+                           (expect #x08 (read-uint16) "attribute value size ≠ #x08")
+                           (expect 0 (read-byte) "res0 ≠ 0")
+                           (define att-type (read-byte)) (prn "    att-type " att-type)
+                           (define att-value (decode-value (read-uint32) att-type))
+                           (prn "    ## " att-name "=" att-value)
+                           `(,(str att-name) ,att-value))
+                         add1 0))))
                (loop (cons element tree))))
 
             ((= type type/end-element)
