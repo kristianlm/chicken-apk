@@ -10,10 +10,10 @@
                          "repackage.c"
                          "reapk.scm" )
                         (link-options "-L" "-lz"))
-             (extension android.manifest
-                        (source "manifest/android.manifest-module.scm")
+             (extension android.bxml
+                        (source "bxml/android.bxml-module.scm")
                         (source-dependencies
-                         "manifest/binary-xml.scm"
-                         "manifest/buffer.scm"
-                         "manifest/prn.scm"
-                         "manifest/string-pool.scm"))))
+                         "bxml/binary-xml.scm"
+                         "bxml/buffer.scm"
+                         "bxml/prn.scm"
+                         "bxml/string-pool.scm"))))
