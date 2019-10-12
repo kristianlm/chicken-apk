@@ -18,6 +18,10 @@
 ;;;    (</element> (str #f) (str 24))
 ;;;  (</ns> (str 17) (str 22)))
 ;;;
+;;; where (str n) points to the nth element in the string-pool. we
+;;; assume string-pool declarations come before references to them
+;;; (seems to be the case in the binary output I've seen).
+;;;
 ;;; sxml typically looks like this:
 ;;;
 ;;; (@ns ("android" "http://schemas.android.com/apk/res/android")
@@ -43,10 +47,12 @@
 ;;;              (action (@ (name "android.intent.action.MAIN")))
 ;;;              (category (@ (name "android.intent.category.LAUNCHER"))))))))
 
+(import (only chicken.string conc)
+        (only chicken.io read-string)
+        (only matchable match match-lambda)
+        (only srfi-1 list-tabulate unfold))
 
-(import chicken.string chicken.io matchable)
-
-(include "string-pool.scm")
+;; OBS: we need buffer.scm and friends
 
 (import (only (chicken pretty-print) pp))
 
@@ -80,7 +86,7 @@
 ;; I'm tierd of seeing (str 4294967295)
 (define (str index) `(str ,(if (= index #xffffffff) #f index)))
 
-(define (parse-xml* manifest)
+(define (string->ibax manifest)
 
   (define p (make-seekable-port manifest))
   (parameterize ((current-input-port (p #:port)))
@@ -102,6 +108,7 @@
       (cond ((eof-object? type)
              (prn "well done everyone")
              (reverse tree))
+
             ((= type type/string-pool)
              (loop (cons (parse-string-pool (lambda () (p #:pos)) seek)
                          tree)))
@@ -112,7 +119,12 @@
                (define size (read-uint32))
                (define len (quotient (- size 8) 4)) ;; what is going on?
                (prn "resource size " size ", len " len)
-               (loop (cons `(resource-map ,(list-tabulate len (lambda (i) (read-uint32)))) tree))))
+               (define mapping
+                 (unfold (lambda (x) (>= x len))
+                         (lambda (x) (read-uint32))
+                         add1 0))
+               (loop (cons `(resource-map ,mapping) tree))))
+
             ((= type type/start-namespace)
              (let ()
                (expect #x10 (read-uint16) "  expecting ns header #x10")
@@ -132,10 +144,11 @@
                (define prefix (read-uint32))
                (define uri (read-uint32))
                (loop (cons `(</ns> ,(str prefix) ,(str uri)) tree))))
+
             ((= type type/start-element)
              (let ()
                (expect #x10 (read-uint16) "  element header size ≠ #x10")
-               (define chunk-size-or-something-like-that (read-uint32)) (prn "chunk-size " chunk-size-or-something-like-that)
+               (define chunk-size (read-uint32)) (prn "  chunk-size " chunk-size)
                (define line (read-uint32))    (prn "  line# " line)
                (define comment (read-uint32)) (prn "  comment " comment)
                (define ns (read-uint32))      (prn "  ns: " ns)
@@ -143,26 +156,27 @@
                (expect #x14 (read-uint16) "ns-name sttribute start ≠ #x14")
                (expect #x14 (read-uint16) "ns-name attribute size ≠ #x14")
                (define att-count (read-uint16)) (prn "  att-count " att-count)
-               (define id-index (read-uint16)) (prn "id-index: " id-index)
-               (define class-index (read-uint16)) (prn "class-index: " class-index)
-               (define style-index (read-uint16)) (prn "style-index: " style-index)
+               (define id-index (read-uint16)) (prn "  id-index: " id-index)
+               (define class-index (read-uint16)) (prn "  class-index: " class-index)
+               (define style-index (read-uint16)) (prn "  style-index: " style-index)
                (define element
                  `(<element>
                    ,(str ns) ,(str tag)
-                   ,(reverse
-                     (list-tabulate
-                      att-count
-                      (lambda (i)
-                        (define att-ns (read-uint32)) (prn "  att-ns " att-ns)
-                        (define att-name (read-uint32)) ;;(prn "  att-name " (sp-ref att-name))
-                        (define att-raw-value (read-uint32))
-                        (expect #x08 (read-uint16) "attribute value size ≠ #x08")
-                        (expect 0 (read-byte) "res0 ≠ 0")
-                        (define att-type (read-byte)) (prn "  att-type " att-type)
-                        (define att-value (decode-value (read-uint32) att-type))
-                        (prn "  ## " att-name "=" att-value)
-                        `(,(str att-name) ,att-value))))))
+                   (@ ,@(reverse
+                         (list-tabulate
+                          att-count
+                          (lambda (i)
+                            (define att-ns (read-uint32)) (prn "    att-ns " att-ns)
+                            (define att-name (read-uint32)) ;;(prn "  att-name " (sp-ref att-name))
+                            (define att-raw-value (read-uint32))
+                            (expect #x08 (read-uint16) "attribute value size ≠ #x08")
+                            (expect 0 (read-byte) "res0 ≠ 0")
+                            (define att-type (read-byte)) (prn "    att-type " att-type)
+                            (define att-value (decode-value (read-uint32) att-type))
+                            (prn "    ## " att-name "=" att-value)
+                            `(,(str att-name) ,att-value)))))))
                (loop (cons element tree))))
+
             ((= type type/end-element)
              (let ()
                (expect #x10 (read-uint16) "  element header size ≠ #x10")
@@ -172,15 +186,124 @@
                (define ns (read-uint32))      (prn "  ns: " ns)
                (define tag (read-uint32)) (prn "  tag: " tag)
                (loop (cons `(</element> ,(str ns) ,(str tag)) tree))))
+
             (else
              (prn "  error; don't know how to handle type " type)
              (pp tree))))))
 
+(define (write-ibax ibax)
+
+  (write-uint32 #x00080003) ;; header
+  (define len (write-uint32 0))
+
+  (let loop ((ibax ibax))
+    (if (pair? ibax)
+        (match (car ibax)
+
+          (('string-pool 'utf8 (strings ...)) (error "utf8 unparsing not implemented"))
+
+          (('string-pool 'utf16 (strings ...))
+           (write-uint16 type/string-pool) ;; string-pool type
+           (unparse-string-pool strings)
+           (loop (cdr ibax)))
+
+          (('resource-map (mapping ...))
+           (write-uint16 type/resource-map)
+           (write-uint16 #x08)                         ;; header size
+           (write-uint32 (+ 8 (* 4 (length mapping)))) ;; mystery counting technique
+           (for-each write-uint32 mapping)
+           (loop (cdr ibax)))
+
+          (('<ns>  ('str prefix) ('str url))
+           (let ()
+             (write-uint16 type/start-namespace)
+             (write-uint16 #x10) ;; header element size
+             (define here (current-buffer-pos))
+             (define chunk-size (write-uint32 0)) ;; fixed later
+             (write-uint32 0)                     ;; line
+             (write-uint32 #xffffffff)            ;; comment
+             (write-uint32 (or prefix #xffffffff))
+             (write-uint32 (or url #xffffffff))
+             (chunk-size (+ 4 (- (current-buffer-pos) here)))
+             (loop (cdr ibax))))
+
+          (('</ns>  ('str prefix) ('str url))
+           (let ()
+             (write-uint16 type/end-namespace)
+             (write-uint16 #x10) ;; header element size
+             (define here (current-buffer-pos))
+             (define chunk-size (write-uint32 0)) ;; fixed later
+             (write-uint32 0)                     ;; line
+             (write-uint32 #xffffffff)            ;; comment
+             (write-uint32 (or prefix #xffffffff))
+             (write-uint32 (or url #xffffffff))
+             (chunk-size (+ 4 (- (current-buffer-pos) here)))
+             (loop (cdr ibax))))
+
+          (('<element> ('str ns) ('str tag) ('@ attributes ...))
+           (let ()
+             (write-uint16 type/start-element)
+             (write-uint16 #x10) ;; element header size
+             (define here (current-buffer-pos))
+             (define chunk-size (write-uint32 #x00))
+             (write-uint32 #xffffffff)          ;; line
+             (write-uint32 #xffffffff)          ;; comment
+             (write-uint32 (or ns #xffffffff))  ;; ns
+             (write-uint32 (or tag #xffffffff)) ;; tag
+             (write-uint16 #x14)                ;; start?
+             (write-uint16 #x14)                ;; stop?
+             (write-uint16 (length attributes)) ;; att-count
+             (write-uint16 0)                   ;; id-index
+             (write-uint16 0)                   ;; class-index
+             (write-uint16 0)                   ;; style-index
+             (for-each (match-lambda
+                        ( (('str key) val)
+                          (receive (val type)
+                              (match val
+                                (#t (values #xffffffff att/bool))
+                                (#f (values #x00000000 att/bool))
+                                (('str val) (values val att/string))
+                                (('ref val) (values val att/reference))
+                                ((? number? val) (values val att/dec))
+                                (else (error "unknown attribute value type " val)))
+                            (write-uint32 #xffffffff) ;; ns
+                            (write-uint32 key)        ;; name
+                            (write-uint32 val)        ;; raw-value
+                            (write-uint16 #x08)       ;; value size
+                            (write-uint8 #x00)        ;; res0
+                            (write-uint8 type)        ;; type
+                            (write-uint32 val)        ;; value
+                            ))
+                        (else (error "no matching patt" else)))
+                       attributes)
+             (chunk-size (+ 4 (- (current-buffer-pos) here)))
+             (loop (cdr ibax))))
+
+          (('</element> ('str ns) ('str tag))
+           (let ()
+             (write-uint16 type/end-element)
+             (write-uint16 #x10) ;; element header size
+             (define here (current-buffer-pos))
+             (define chunk-size (write-uint32 #x00))
+             (write-uint32 #xffffffff)          ;; line
+             (write-uint32 #xffffffff)          ;; comment
+             (write-uint32 (or ns #xffffffff))  ;; ns
+             (write-uint32 (or tag #xffffffff)) ;; tag
+             (chunk-size (+ 4 (- (current-buffer-pos) here)))
+             (loop (cdr ibax))))
+
+          (('))
+
+          (else (error "unknown: " else)
+                (loop (cdr ibax))))))
+
+  (len (current-buffer-pos)))
+
+(define (ibax->string ibax)
+  (wotb (lambda () (write-ibax ibax))))
+
 ;; turn ibax into nested sxml
-(define (parse-xml manifest)
-
-  (define ibax (parse-xml* manifest))
-
+(define (ibax->sxml ibax)
 
   (let loop ((ibax ibax)
              (sp #f)
@@ -215,14 +338,12 @@
           (('</ns> prefix uri)
            (loop (cdr ibax) sp rm (pop)))
 
-          (('<element> ns tag attributes)
+          (('<element> ns tag ('@ attributes ...))
            (loop (cdr ibax) sp rm
                  (push `(,(string->symbol (decode tag))
-                         ,@(if (null? attributes)
-                               '()
-                               `((@ ,@(map (lambda (lst) (list (string->symbol (decode (car lst)))
-                                                               (decode (cadr lst))))
-                                           attributes))))))))
+                         (@ ,@(map (lambda (lst) (list (string->symbol (decode (car lst)))
+                                                       (decode (cadr lst))))
+                                   attributes))))))
 
           (('</element> ns tag)
            (loop (cdr ibax) sp rm (pop)))
@@ -234,28 +355,50 @@
         (caar tree))))
 
 
-(define (unparse-xml* data)
-  (define (pull)
-    (if (pair? data)
-        (let ((obj (car data)))
-          (set! data (cdr data))
-          obj)
-        (error "unexpected end of data stream")))
+(define (sxml->ibax sxml)
 
-  (write-uint32 #x00080003) ;; header
+  (define sp '())
+  (define (str! str) ;; append to string pool
+    (let ((index (length sp)))
+      (set! sp (cons str sp))
+      `(str ,index)))
 
-  (define len (write-uint32 0)) ;; fixed later
+  (define ibax '())
+  (define (ins! ibax1)
+    (set! ibax (cons ibax1 ibax)))
 
-  (write-uint16 #x0001) ;; string-pool type
-  (define sp (pull))
-  (unparse-string-pool sp)
+  (let loop ((sxmls (list sxml)))
+    (if (pair? sxmls)
+        (match (car sxmls)
+          (('@ns (prefix url) rest ...)
+           (set! prefix (str! prefix))
+           (set! url (str! url))
+           (ins!  `(<ns> ,prefix ,url))
+           (loop rest)
+           (ins!  `(</ns> ,prefix ,url))
+           (loop (cdr sxmls)))
 
-  (define rest (pull))
-  (out rest)
-  (len (current-buffer-pos)))
+          ((element ('@ attributes ...) rest ...)
+           (let ()
+             (define atts
+               (map (match-lambda
+                     ((akey aval)
+                      (cond ((string? aval) (set! aval (str! aval)))
+                            ((symbol? aval) (set! aval (str! (symbol->string aval)))))
+                      (set! akey (str! (symbol->string akey)))
+                      (list akey aval)))
+                    attributes))
+             (set! element (str! (symbol->string element)))
+             (ins! `(<element> (str #f) ,element (@ ,@atts)))
+             (loop rest)
+             (ins! `(</element> (str #f) ,element))
+             (loop (cdr sxmls))))
 
+          (else (prn "error: unmatched " sxmls)))
 
-(define (unparse-xml data)
-  (wotb (lambda () (unparse-xml* data))))
+        `((string-pool utf16 ,(reverse sp))
+          (resource-map ())
+          ,@(reverse ibax)))))
 
-(pp (parse-xml (read-string)))
+(define (sxml->bxml sxml) (ibax->string (sxml->ibax sxml)))
+(define (bxml->sxml bxml) (ibax->sxml (string->ibax bxml)))

@@ -8,7 +8,12 @@
                         (source "apk-module.scm")
                         (source-dependencies
                          "repackage.c"
-                         "reapk.scm"
-                         "string-pool.scm"
-                         "buffer.scm" )
-                        (link-options "-L" "-lz"))))
+                         "reapk.scm" )
+                        (link-options "-L" "-lz"))
+             (extension android.manifest
+                        (source "manifest/android.manifest-module.scm")
+                        (source-dependencies
+                         "manifest/binary-xml.scm"
+                         "manifest/buffer.scm"
+                         "manifest/prn.scm"
+                         "manifest/string-pool.scm"))))

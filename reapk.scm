@@ -1,5 +1,6 @@
 (import (chicken foreign)
         (chicken memory)
+        (only (chicken string) conc substring-index)
         (only (chicken process) system)
         (only (chicken process-context) get-environment-variable)
         (only (chicken file) file-exists?)
@@ -60,35 +61,30 @@ C_word edit_apk_file(C_word user, char* fname, char** data, uint64_t* size);
   ((foreign-safe-lambda int "rezip" c-string c-string scheme-object)
    source.apk dest.apk process_fname_data))
 
-(define (string-pool-replace sp replacing)
-  (match sp
-    ((('string-pool utf_ (strings ...)) rest ...)
-     `((string-pool ,utf_ ,(map replacing strings)) ,@rest))
-    (else (error "invalid string-pool" sp))))
-
 (define (discard-meta+lib file)
   (cond ((eq? 0 (substring-index "META-INF/" file)) #f)
         ((eq? 0 (substring-index "lib/" file)) #f)
         (else #t)))
 
-(define (apk-repackage src dst renaming #!optional (keep-file? discard-meta+lib))
-  (rezip src dst
-         (if (procedure? renaming) renaming
-             (lambda (fname data)
-               (and (keep-file? fname)
-                    (cond ((assoc fname renaming) =>
-                           (lambda (renames*)
-                             (define renames (cdr renames*))
-                             (unparse-xml
-                              (string-pool-replace
-                               (parse-xml data)
-                               (lambda (str)
-                                 (print "*****" renames)
-                                 (cond ((assoc str renames) =>
-                                        (lambda (old+new)
-                                          (cadr old+new)))
-                                       (else str)))))))
-                          (else data)))))))
+(define (apk-repackage) (error "TODO"))
+;; (define (apk-repackage src dst renaming #!optional (keep-file? discard-meta+lib))
+;;   (rezip src dst
+;;          (if (procedure? renaming) renaming
+;;              (lambda (fname data)
+;;                (and (keep-file? fname)
+;;                     (cond ((assoc fname renaming) =>
+;;                            (lambda (renames*)
+;;                              (define renames (cdr renames*))
+;;                              (unparse-xml
+;;                               (string-pool-replace
+;;                                (parse-xml data)
+;;                                (lambda (str)
+;;                                  (print "*****" renames)
+;;                                  (cond ((assoc str renames) =>
+;;                                         (lambda (old+new)
+;;                                           (cadr old+new)))
+;;                                        (else str)))))))
+;;                           (else data)))))))
 
 (define (apk-sign filename #!optional
                   (keystore (make-pathname (list (get-environment-variable "HOME")
