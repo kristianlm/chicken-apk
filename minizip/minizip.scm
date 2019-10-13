@@ -1,6 +1,8 @@
 (import (only (chicken gc) set-finalizer!)
         (only (chicken port) make-input-port port-for-each set-port-name!)
         (only (chicken string) conc)
+        (only (chicken time posix) seconds->utc-time)
+        (only (chicken memory representation) number-of-bytes)
 ;;        (only (chicken io) )
         srfi-4)
 (foreign-declare "
@@ -14,12 +16,15 @@
 ")
 
 (define-record unzFile pointer first?)
+(define-record zipFile pointer closed?)
 
 (define-foreign-type unzFile c-pointer
   (lambda (x) (unzFile-pointer x))
   (lambda (x) (make-unzFile x #f)))
 
-;;(define-foreign-type zipFile c-pointer)
+(define-foreign-type zipFile c-pointer
+  (lambda (x) (zipFile-pointer x))
+  (lambda (x) (make-zipFile x #f)))
 
 (define (CHECK ret msg what)
   (if (eq? ret (foreign-value "UNZ_OK" int))
@@ -98,6 +103,67 @@
   (let ((uz (unzipper path)))
     (port-for-each (lambda (port) (proc uz (unzipper-filename uz) port))
                    (lambda () (unzipper-next! uz #!eof)))))
+
+;;; ==================== zipper ====================
+
+;; close but no sigar
+;; idempotent
+(define (zip-close z #!optional (comment #f) )
+  (unless (zipFile-closed? z)
+    (zipFile-closed?-set! z #t)
+    ((foreign-lambda int "zipClose" zipFile (const c-string)) z comment)))
+
+(define (zipper pathname #!optional (append 'create))
+  (let ((z ((foreign-lambda zipFile "zipOpen" c-string int)
+            pathname
+            (case append
+              ((create)      (foreign-value "APPEND_STATUS_CREATE"      int))
+              ((createafter) (foreign-value "APPEND_STATUS_CREATEAFTER" int))
+              ((addinzip)    (foreign-value "APPEND_STATUS_ADDINZIP"    int))
+              (else (error "append ∉ {create createafter addinzip}" append))))))
+    (if (equal? #f (zipFile-pointer z))
+        (error "could not create zipper" pathname)
+        (set-finalizer! z zip-close))))
+
+(define zipper-new*
+  (foreign-lambda* int ((zipFile z) (c-string filename)
+                        (int method) (int level)
+                        (int sec) (int min) (int hour) (int mday) (int mon) (int year))
+                   "
+  zip_fileinfo zipfi;
+  zipfi.tmz_date.tm_sec = sec;
+  zipfi.tmz_date.tm_min = min;
+  zipfi.tmz_date.tm_hour = hour;
+  zipfi.tmz_date.tm_mday = mday;
+  zipfi.tmz_date.tm_mon = mon;
+  zipfi.tmz_date.tm_year = year;
+  zipfi.dosDate = 0;
+  zipfi.external_fa = 0;
+  zipfi.internal_fa = 0;
+  return(zipOpenNewFileInZip(z, filename, &zipfi, NULL, 0, NULL, 0, NULL, method, level));
+" ))
+
+(define (zipper-new z filename #!key (method 'deflated) level (time (seconds->utc-time)))
+  (zipper-new* z filename
+                (case method
+                  ((deflated) (foreign-value "Z_DEFLATED" int))
+                  ((none #f)  0)
+                  (else (error "method must be 'deflated or #f (none)" method)))
+                (case level ;; numeric value 0-9 (Z_DEFAULT_COMPRESSION = -1)
+                  ((#f) (foreign-value "Z_DEFAULT_COMPRESSION" int))
+                  (else level))
+                (vector-ref time 0)            ;; sec
+                (vector-ref time 1)            ;; min
+                (vector-ref time 2)            ;; hour
+                (vector-ref time 3)            ;; mday
+                (vector-ref time 4)            ;; month
+                (+ 1900 (vector-ref time 5)))) ;; year
+
+(define (zipper-write z str #!optional (len (number-of-bytes str)))
+  ((foreign-lambda int "zipWriteInFileInZip" zipFile scheme-pointer unsigned-int) z str len))
+(define (zipper-close z)
+  (CHECK ((foreign-lambda int "zipCloseFileInZip" zipFile) z) "could not close zipper" 'zipper-close))
+
 
 (define-record-printer unzFile
   (lambda (x p) (display (conc  "#<unzipper>") p)))
