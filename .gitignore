@@ -6,3 +6,16 @@
 /android.apk.so
 /android.apk.static.o
 /tests/test-5926f235c0f0c4493cc48c82a6a73f4bcd2940bf.zip
+/android.minizip.import.scm
+/android.minizip.import.so
+/android.minizip.link
+/android.minizip.so
+/android.minizip.static.o
+/android.build.sh
+/android.bxml.import.scm
+/android.bxml.import.so
+/android.bxml.link
+/android.bxml.so
+/android.bxml.static.o
+/android.install.sh
+/chicken-android
