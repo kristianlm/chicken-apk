@@ -165,5 +165,19 @@
   (CHECK ((foreign-lambda int "zipCloseFileInZip" zipFile) z) "could not close zipper" 'zipper-close))
 
 
+;; ==================== record printers ====================
+
 (define-record-printer unzFile
-  (lambda (x p) (display (conc  "#<unzipper>") p)))
+  (lambda (x p)
+    ;; show file index (-1 is before first file, 0 is first file etc)
+    (display (conc "#<unzipper "
+                   (- ((foreign-lambda* int ((unzFile uz)) "return(((unz64_s*)uz)->num_file);") x)
+                      (if (unzFile-first? x) 1 0))
+                   ">") p)))
+
+(define-record-printer zipFile
+  (lambda (x p)
+    (display (conc  "#<zipper"
+                    (if (= 1 ((foreign-lambda* int ((zipFile z))
+                                               "return(((zip64_internal*)z)->in_opened_file_inzip);") x)) " open" "")
+                    (if (zipFile-closed? x) " closed" "") ">") p)))
