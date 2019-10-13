@@ -99,7 +99,7 @@
   unzGetCurrentFileInfo(uz, &info, 0, 0, NULL, 0, NULL, 0);
   return(info.compression_method);") uz))
 
-(define (unzip-walk path proc)
+(define (unzip-for-each path proc)
   (let ((uz (unzipper path)))
     (port-for-each (lambda (port) (proc uz (unzipper-filename uz) port))
                    (lambda () (unzipper-next uz #!eof)))))

@@ -9,10 +9,10 @@
 
   (("manifest" file.apk)
    (define path (car (command-line-arguments)))
-   (unzip-walk file.apk
-               (lambda (uz path port)
-                 (if (equal? path "AndroidManifest.xml")
-                     (pp (bxml->sxml (read-string #f port)))))))
+   (unzip-for-each file.apk
+                   (lambda (uz path port)
+                     (if (equal? path "AndroidManifest.xml")
+                         (pp (bxml->sxml (read-string #f port)))))))
 
   (else
    (print "no match for command-line-arguments " (command-line-arguments))
