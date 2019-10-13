@@ -123,3 +123,27 @@
  (test ibax (bxml->ibax (ibax->bxml ibax)))
 
  )
+
+
+(import test (android minizip)
+        (only (chicken file) delete-file*)
+        (only (chicken io) read-string))
+
+(test-group
+ "minizip"
+
+ (define filename "test-5926f235c0f0c4493cc48c82a6a73f4bcd2940bf.zip")
+ (delete-file* filename)
+
+ (let ((z (zipper filename)))
+   (zipper-new z "a.txt") (zipper-write z "file a\n")
+   (zipper-new z "b.txt") (zipper-write z "file b\n")
+   (zip-close z))
+
+ (let ((uz (unzipper filename)))
+   (let ((port (unzipper-next uz)))
+     (test "a.txt" (unzipper-filename uz))
+     (test "file a\n" (read-string #f port)))
+   (let ((port (unzipper-next uz)))
+     (test "b.txt" (unzipper-filename uz))
+     (test "file b\n" (read-string #f port)))))
