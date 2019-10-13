@@ -154,3 +154,5 @@
    (let ((port (unzipper-next uz)))
      (test "b.txt" (unzipper-filename uz))
      (test "file b\n" (read-string #f port)))))
+
+(test-exit)
