@@ -164,6 +164,12 @@
 (define (zipper-close z)
   (CHECK ((foreign-lambda int "zipCloseFileInZip" zipFile) z) "could not close zipper" 'zipper-close))
 
+(define (with-zipper path proc)
+  (let ((z (if (zipFile? path) path (zipper path))))
+    (dynamic-wind
+        (lambda () #f)
+        (lambda () (proc z))
+        (lambda () (zip-close z)))))
 
 ;; ==================== record printers ====================
 
