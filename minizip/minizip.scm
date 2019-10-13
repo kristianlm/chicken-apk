@@ -29,7 +29,7 @@
 (define (CHECK ret msg what)
   (if (eq? ret (foreign-value "UNZ_OK" int))
       (void)
-      (error msg what)))
+      (error msg what ret)))
 
 (define (unzip-close* file)
   (CHECK ((foreign-lambda int "unzClose" unzFile) file) "unable to close file" file))
