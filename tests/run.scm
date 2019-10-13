@@ -5,16 +5,16 @@
  "sxml <-> ibax"
 
  (define sxml
-   `(@ns ("hi" "http")
-         (A (@ (att1 "one")
+   `(@ns (tens "http://com.example/tens")
+         (A (@ (tens att1 "one")
                (att2 "two"))
             (A-A (@)))))
 
  (define ibax
-   `((string-pool utf16 ("hi" "http" "one" "att1" "two" "att2" "A" "A-A"))
+   `((string-pool utf16 ("tens" "http://com.example/tens" "att1" "one" "att2" "two" "A" "A-A"))
      (resource-map ())
      (<ns> (str 0) (str 1))
-     (<element> (str #f) (str 6) (@ ((str 3) (str 2)) ((str 5) (str 4))))
+     (<element> (str #f) (str 6) (@ ((str 1) (str 2) (str 3)) ((str #f) (str 4) (str 5))))
      (<element> (str #f) (str 7) (@))
      (</element> (str #f) (str 7))
      (</element> (str #f) (str 6))
@@ -87,29 +87,36 @@
  (define ibax
    `((string-pool utf16 ("label" "icon" "name" "debuggable" "minSdkVersion" "versionCode"
                          "versionName" "targetSdkVersion" "allowBackup" "supportsRtl" "roundIcon"
-                         "compileSdkVersion" "compileSdkVersionCodename" "1.0" "9" "action"
-                         "activity" "android" "android.intent.action.MAIN"
-                         "android.intent.category.LAUNCHER" "application" "category"
-                         "http://schemas.android.com/apk/res/android" "intent-filter"
-                         "manifest" "org.call_cc.template.sotest"
+                         "compileSdkVersion" "compileSdkVersionCodename" "1.0" "9" "action" "activity"
+                         "android" "android.intent.action.MAIN" "android.intent.category.LAUNCHER"
+                         "application" "category" "http://schemas.android.com/apk/res/android"
+                         "intent-filter" "manifest" "org.call_cc.template.sotest"
                          "org.call_cc.template.sotest.MainActivity" "package"
                          "platformBuildVersionCode" "platformBuildVersionName" "uses-sdk"))
      (resource-map (16842753 16842754 16842755 16842767 16843276 16843291 16843292
                              16843376 16843392 16843695 16844076 16844146 16844147))
      (<ns> (str 17) (str 22))
-     (<element> (str #f) (str 24) (@ ((str 5) 1) ((str 6) (str 13)) ((str 11) 28)
-                                     ((str 12) (str 14)) ((str 27) (str 25))
-                                     ((str 28) 28) ((str 29) 9)))
-     (<element> (str #f) (str 30) (@ ((str 4) 21) ((str 7) 28)))
+     (<element> (str #f) (str 24) (@ ((str 22) (str 5) 1)
+                                     ((str 22) (str 6) (str 13))
+                                     ((str 22) (str 11) 28)
+                                     ((str 22) (str 12) (str 14))
+                                     ((str #f) (str 27) (str 25))
+                                     ((str #f) (str 28) 28)
+                                     ((str #f) (str 29) 9)))
+     (<element> (str #f) (str 30) (@ ((str 22) (str 4) 21)
+                                     ((str 22) (str 7) 28)))
      (</element> (str #f) (str 30))
-     (<element> (str #f) (str 20) (@ ((str 0) (ref 2131099648)) ((str 1) (ref 2131034112))
-                                     ((str 3) #t) ((str 8) #t) ((str 9) #t)
-                                     ((str 10) (ref 2131034113))))
-     (<element> (str #f) (str 16) (@ ((str 2) (str 26))))
+     (<element> (str #f) (str 20) (@ ((str 22) (str 0) (ref 2131099648))
+                                     ((str 22) (str 1) (ref 2131034112))
+                                     ((str 22) (str 3) #t)
+                                     ((str 22) (str 8) #t)
+                                     ((str 22) (str 9) #t)
+                                     ((str 22) (str 10) (ref 2131034113))))
+     (<element> (str #f) (str 16) (@ ((str 22) (str 2) (str 26))))
      (<element> (str #f) (str 23) (@))
-     (<element> (str #f) (str 15) (@ ((str 2) (str 18))))
+     (<element> (str #f) (str 15) (@ ((str 22) (str 2) (str 18))))
      (</element> (str #f) (str 15))
-     (<element> (str #f) (str 21) (@ ((str 2) (str 19))))
+     (<element> (str #f) (str 21) (@ ((str 22) (str 2) (str 19))))
      (</element> (str #f) (str 21))
      (</element> (str #f) (str 23))
      (</element> (str #f) (str 16))

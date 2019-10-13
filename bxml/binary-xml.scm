@@ -24,12 +24,12 @@
 ;;;
 ;;; sxml typically looks like this:
 ;;;
-;;; (@ns ("android" "http://schemas.android.com/apk/res/android")
+;;; (@ns (android "http://schemas.android.com/apk/res/android")
 ;;;      (manifest
-;;;        (@ (versionCode 1)
-;;;           (versionName "1.0")
-;;;           (compileSdkVersion 28)
-;;;           (compileSdkVersionCodename "9")
+;;;        (@ (android versionCode 1)
+;;;           (android versionName "1.0")
+;;;           (android compileSdkVersion 28)
+;;;           (android compileSdkVersionCodename "9")
 ;;;           (package "org.call_cc.template.sotest")
 ;;;           (platformBuildVersionCode 28)
 ;;;           (platformBuildVersionName 9))
@@ -42,15 +42,15 @@
 ;;;             (supportsRtl #t)
 ;;;             (roundIcon (ref 2131034113)))
 ;;;          (activity
-;;;            (@ (name "org.call_cc.template.sotest.MainActivity"))
+;;;            (@ (android name "org.call_cc.template.sotest.MainActivity"))
 ;;;            (intent-filter
-;;;              (action (@ (name "android.intent.action.MAIN")))
-;;;              (category (@ (name "android.intent.category.LAUNCHER"))))))))
+;;;              (action   (@ (android name "android.intent.action.MAIN")))
+;;;              (category (@ (android name "android.intent.category.LAUNCHER"))))))))
 
 (import (only chicken.string conc)
         (only chicken.io read-string)
         (only matchable match match-lambda)
-        (only srfi-1 unfold))
+        (only srfi-1 unfold filter))
 
 ;; OBS: we need buffer.scm and friends
 
@@ -174,7 +174,7 @@
                            (define att-type (read-byte)) (prn "    att-type " att-type)
                            (define att-value (decode-value (read-uint32) att-type))
                            (prn "    ## " att-name "=" att-value)
-                           `(,(str att-name) ,att-value))
+                           `(,(str att-ns) ,(str att-name) ,att-value))
                          add1 0))))
                (loop (cons element tree))))
 
@@ -249,7 +249,7 @@
              (define chunk-size (write-uint32 #x00))
              (write-uint32 #xffffffff)          ;; line
              (write-uint32 #xffffffff)          ;; comment
-             (write-uint32 (or ns #xffffffff))  ;; ns
+             (write-uint32 (or ns #xffffffff))  ;; element ns
              (write-uint32 (or tag #xffffffff)) ;; tag
              (write-uint16 #x14)                ;; start?
              (write-uint16 #x14)                ;; stop?
@@ -258,7 +258,7 @@
              (write-uint16 0)                   ;; class-index
              (write-uint16 0)                   ;; style-index
              (for-each (match-lambda
-                        ( (('str key) val)
+                        ( (('str ns) ('str key) val)
                           (receive (val type)
                               (match val
                                 (#t (values #xffffffff att/bool))
@@ -267,13 +267,13 @@
                                 (('ref val) (values val att/reference))
                                 ((? number? val) (values val att/dec))
                                 (else (error "unknown attribute value type " val)))
-                            (write-uint32 #xffffffff) ;; ns
-                            (write-uint32 key)        ;; name
-                            (write-uint32 val)        ;; raw-value
-                            (write-uint16 #x08)       ;; value size
-                            (write-uint8 #x00)        ;; res0
-                            (write-uint8 type)        ;; type
-                            (write-uint32 val)        ;; value
+                            (write-uint32 (or ns #xffffffff)) ;; attribute ns
+                            (write-uint32 key)  ;; name
+                            (write-uint32 val)  ;; raw-value
+                            (write-uint16 #x08) ;; value size
+                            (write-uint8 #x00)  ;; res0
+                            (write-uint8 type)  ;; type
+                            (write-uint32 val)  ;; value
                             ))
                         (else (error "no matching patt" else)))
                        attributes)
@@ -309,6 +309,7 @@
   (let loop ((ibax ibax)
              (sp #f)
              (rm #f)
+             (ns '()) ;; alist ((prefix "http://..") ...)
              (tree '(())))
 
     (define (push element) (cons (reverse element) tree))
@@ -319,35 +320,52 @@
             ((number? value) value)
             (else
              (match value
-               (('str x) (list-ref sp x))
+               (('str x) (if (eq? x #f) #f (list-ref sp x)))
                (('hex x) x) ;; ok to loose this was stored as hex?
                (('ref x) value) ;; don't know how to resolve refs to resources.arsc
                (else (error "unknown value" value))))))
+
+    (define (ns-find uri) ;; uri is string
+      (cond ((assoc uri ns) => cadr)
+            (else (error "namespace not found" uri ns))))
 
     (if (pair? ibax)
         (match (car ibax)
 
           (('string-pool encoding strings)
-           (loop (cdr ibax) strings rm tree))
+           (loop (cdr ibax) strings rm ns tree))
 
           (('resource-map rm)
-           (loop (cdr ibax) sp rm tree))
+           (loop (cdr ibax) sp rm ns tree))
 
           (('<ns> prefix uri)
-           (loop (cdr ibax) sp rm (push `(@ns (,(decode prefix) ,(decode uri))) )))
+           (loop (cdr ibax) sp rm
+                 (cons `(,(decode uri) ,(string->symbol (decode prefix))) ns)
+                 (push `(@ns (,(string->symbol (decode prefix)) ,(decode uri))) )))
 
           (('</ns> prefix uri)
-           (loop (cdr ibax) sp rm (pop)))
-
-          (('<element> ns tag ('@ attributes ...))
            (loop (cdr ibax) sp rm
+                 (filter (match-lambda ((pfx uri*) (equal? uri uri*))
+                                       (else (error "invalid namespace entry" else)))
+                         ns)
+                 (pop)))
+
+          (('<element> element-ns tag ('@ attributes ...))
+           (loop (cdr ibax) sp rm ns
                  (push `(,(string->symbol (decode tag))
-                         (@ ,@(map (lambda (lst) (list (string->symbol (decode (car lst)))
-                                                       (decode (cadr lst))))
+                         (@ ,@(map (match-lambda
+                                    ((nsuri an av)
+                                     (let ((uri (decode nsuri)))
+                                       (if uri
+                                           (list (ns-find uri)
+                                                 (string->symbol (decode an))
+                                                 (decode av))
+                                           (list (string->symbol (decode an))
+                                                 (decode av))))))
                                    attributes))))))
 
-          (('</element> ns tag)
-           (loop (cdr ibax) sp rm (pop)))
+          (('</element> element-ns tag)
+           (loop (cdr ibax) sp rm ns (pop)))
 
           (else
            (prn "  error; don't know how to handle ibax" (car ibax))
@@ -360,6 +378,7 @@
 
   (define sp '())
   (define (str! str) ;; append to string pool
+    (unless (string? str) (error "can not add non-string to sp" str))
     (let ((index (length sp)))
       (set! sp (cons str sp))
       `(str ,index)))
@@ -368,32 +387,48 @@
   (define (ins! ibax1)
     (set! ibax (cons ibax1 ibax)))
 
-  (let loop ((sxmls (list sxml)))
+  (let loop ((sxmls (list sxml))
+             (ns '())) ;; alist ((prefix (str %uri)) ...) (not ordered like above)
+
     (if (pair? sxmls)
         (match (car sxmls)
-          (('@ns (prefix url) rest ...)
-           (set! prefix (str! prefix))
-           (set! url (str! url))
-           (ins!  `(<ns> ,prefix ,url))
-           (loop rest)
-           (ins!  `(</ns> ,prefix ,url))
-           (loop (cdr sxmls)))
+          (('@ns (prefix uri) rest ...)
+           (let ((prefix* (str! (symbol->string prefix)))
+                 (uri*    (str! uri)))
+             (ins!  `(<ns> ,prefix* ,uri*))
+             (loop rest (cons `(,prefix ,uri*) ns))
+             (ins!  `(</ns> ,prefix* ,uri*))
+             (loop (cdr sxmls) ns)))
 
+          ;; typical attributes: ( (android label "hello" ) (package "com.example") )
           ((element ('@ attributes ...) rest ...)
            (let ()
+
+             ;; add strings to sp, turn everything to uint32
+             (define (encode x)
+               (cond ((string? x) (str! x))
+                     ((symbol? x) (str! (symbol->string x)))
+                     (else x)))
+
+             (define (ns-find pfx) ;; pfx is prefix symbol
+               (cadr (assoc pfx ns)))
+
              (define atts
                (map (match-lambda
-                     ((akey aval)
-                      (cond ((string? aval) (set! aval (str! aval)))
-                            ((symbol? aval) (set! aval (str! (symbol->string aval)))))
-                      (set! akey (str! (symbol->string akey)))
-                      (list akey aval)))
+
+                     ((ans key val) ;; attribute ns
+                      `(,(ns-find ans) ,(encode key) ,(encode val)))
+
+                     ((key val) ;; no attribute namespace
+                      `((str #f) ,(encode key) ,(encode val)))
+
+                     (else (error "invalid attibute pattern" else)))
                     attributes))
              (set! element (str! (symbol->string element)))
              (ins! `(<element> (str #f) ,element (@ ,@atts)))
-             (loop rest)
+             (loop rest ns)
              (ins! `(</element> (str #f) ,element))
-             (loop (cdr sxmls))))
+             (loop (cdr sxmls) ns)))
 
           ((element rest ...)
            (error "missing (@ attributes ...) in element" (list element rest)))
