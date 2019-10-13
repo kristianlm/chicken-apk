@@ -395,7 +395,10 @@
              (ins! `(</element> (str #f) ,element))
              (loop (cdr sxmls))))
 
-          (else (prn "error: unmatched " sxmls)))
+          ((element rest ...)
+           (error "missing (@ attributes ...) in element" (list element rest)))
+
+          (else (error "internal sxml-ibax error: no match" sxmls)))
 
         `((string-pool utf16 ,(reverse sp))
           (resource-map ())
