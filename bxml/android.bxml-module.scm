@@ -8,4 +8,4 @@
 (include "bxml/prn.scm")
 (include "bxml/buffer.scm")
 (include "bxml/string-pool.scm")
-(include "bxml/binary-xml.scm"))
+(include "bxml/bxml.scm"))

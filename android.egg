@@ -13,7 +13,7 @@
              (extension android.bxml
                         (source "bxml/android.bxml-module.scm")
                         (source-dependencies
-                         "bxml/binary-xml.scm"
+                         "bxml/bxml.scm"
                          "bxml/buffer.scm"
                          "bxml/prn.scm"
                          "bxml/string-pool.scm"))
