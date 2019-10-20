@@ -166,14 +166,14 @@
                    (@ ,@(unfold
                          (lambda (x) (>= x att-count))
                          (lambda (i)
-                           (define att-ns (read-uint32)) (prn "    att-ns " att-ns)
-                           (define att-name (read-uint32)) ;;(prn "  att-name " (sp-ref att-name))
-                           (define att-raw-value (read-uint32))
+                           (prn "    ===== " i)
+                           (define att-ns (read-uint32))        (prn "    att-ns " att-ns)
+                           (define att-name (read-uint32))      (prn "    att-name " att-name)
+                           (define att-raw-value (read-uint32)) (prn "    att-raw " att-raw-value)
                            (expect #x08 (read-uint16) "attribute value size ≠ #x08")
                            (expect 0 (read-byte) "res0 ≠ 0")
                            (define att-type (read-byte)) (prn "    att-type " att-type)
-                           (define att-value (decode-value (read-uint32) att-type))
-                           (prn "    ## " att-name "=" att-value)
+                           (define att-value (decode-value (read-uint32) att-type)) (prn "    att value" att-value)
                            `(,(str att-ns) ,(str att-name) ,att-value))
                          add1 0))))
                (loop (cons element tree))))
@@ -268,8 +268,9 @@
                                 ((? number? val) (values val att/dec))
                                 (else (error "unknown attribute value type " val)))
                             (write-uint32 (or ns #xffffffff)) ;; attribute ns
-                            (write-uint32 key)  ;; name
-                            (write-uint32 val)  ;; raw-value
+                            (write-uint32 key)                ;; name
+                            ;; guesswork of the week:
+                            (write-uint32 (if (eq? type att/string) val #xffffffff)) ;; raw-value
                             (write-uint16 #x08) ;; value size
                             (write-uint8 #x00)  ;; res0
                             (write-uint8 type)  ;; type
