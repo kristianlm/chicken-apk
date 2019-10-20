@@ -1,9 +1,12 @@
-;; simple buffering mechanism. every (out "binary") adds the string to
-;; a list. strings can be modified afterwards. this is useful if you
-;; want to prefix some serialized data with that length of that
-;; serialized data: you don't know the length before hand. adding the
-;; length prefix with the correct length, then modifying it later
-;; seems to be working quite well.
+;;; simple buffering mechanism. every (out "binary") adds the string to
+;;; a list, and returns a procedure that can modify that string
+;;; in-place.this is useful if you want to prefix some serialized data
+;;; with that length of that serialized data: you don't know the length
+;;; before hand. adding the length prefix with the correct length, then
+;;; modifying it later seems to be working quite well.
+;;;
+;;; all write-uint* procedures return a procedure which lets you
+;;; modify their value.
 
 (import (only (chicken bitwise) arithmetic-shift bitwise-and)
         (only (chicken io) read-byte)
