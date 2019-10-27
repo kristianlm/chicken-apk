@@ -93,11 +93,18 @@
   unzGetCurrentFileInfo(uz, &info, 0, 0, NULL, 0, NULL, 0);
   return(info.uncompressed_size);") uz))
 
-(define (unzipper-compression-method uz)
+(define (unzipper-method* uz)
   ((foreign-lambda* unsigned-long ((unzFile uz)) "
   unz_file_info info; // TODO check ret
   unzGetCurrentFileInfo(uz, &info, 0, 0, NULL, 0, NULL, 0);
   return(info.compression_method);") uz))
+
+(define (unzipper-method uz)
+  (let ((m (unzipper-method* uz)))
+    (cond ((equal? m 0) 'none)
+          ((equal? m (foreign-value "Z_DEFLATED" int)) 'deflated)
+          (else (warning "mystery compressiong method" m)
+                m))))
 
 (define (unzip-for-each path proc)
   (let ((uz (unzipper path)))

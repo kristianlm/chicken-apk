@@ -144,15 +144,17 @@
 
  (let ((z (zipper filename)))
    (zipper-new z "a.txt") (zipper-write z "file a\n")
-   (zipper-new z "b.txt") (zipper-write z "file b\n")
+   (zipper-new z "b.txt" #:method 'none) (zipper-write z "file b\n")
    (zip-close z))
 
  (let ((uz (unzipper filename)))
    (let ((port (unzipper-next uz)))
      (test "a.txt" (unzipper-filename uz))
+     (test 'deflated   (unzipper-method uz))
      (test "file a\n" (read-string #f port)))
    (let ((port (unzipper-next uz)))
      (test "b.txt" (unzipper-filename uz))
+     (test 'none (unzipper-method uz))
      (test "file b\n" (read-string #f port)))))
 
 (test-exit)
