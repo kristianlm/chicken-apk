@@ -1,5 +1,5 @@
 (import (only (chicken gc) set-finalizer!)
-        (only (chicken port) make-input-port port-for-each set-port-name!)
+        (only (chicken port) make-input-port make-output-port port-for-each set-port-name!)
         (only (chicken string) conc)
         (only (chicken time posix) seconds->utc-time)
         (only (chicken memory representation) number-of-bytes)
@@ -50,7 +50,7 @@
   (CHECK ((foreign-lambda int "unzGoToFirstFile" unzFile) uz) 'unzipper-first uz)
   (unzFile-first?-set! uz #t))
 
-(define (unzipper-port* uz)
+(define (unzipper-port uz)
   (define port
     (make-input-port (lambda ()
                        (let* ((s (make-string 1))
@@ -71,7 +71,7 @@
     (cond ((eq? ret (foreign-value "UNZ_END_OF_LIST_OF_FILE" int)) eof)
           ((eq? ret (foreign-value "UNZ_OK" int))
            (unzipper-open uz)
-           (unzipper-port* uz))
+           (unzipper-port uz))
           (else (error "could not go to next file" uz ret)))))
 
 (define (unzipper pathname)
@@ -150,21 +150,28 @@
   return(zipOpenNewFileInZip(z, filename, &zipfi, NULL, 0, NULL, 0, NULL, method, level));
 " ))
 
+(define (zipper-port z)
+  (make-output-port (lambda (s) (zipper-write z s)) ;; write
+                    (lambda () (zipper-close z)))) ;; close
+
 (define (zipper-new z filename #!key (method 'deflated) level (time (seconds->utc-time)))
-  (zipper-new* z filename
-                (case method
-                  ((deflated) (foreign-value "Z_DEFLATED" int))
-                  ((none #f)  0)
-                  (else (error "method must be 'deflated or #f (none)" method)))
-                (case level ;; numeric value 0-9 (Z_DEFAULT_COMPRESSION = -1)
-                  ((#f) (foreign-value "Z_DEFAULT_COMPRESSION" int))
-                  (else level))
-                (vector-ref time 0)            ;; sec
-                (vector-ref time 1)            ;; min
-                (vector-ref time 2)            ;; hour
-                (vector-ref time 3)            ;; mday
-                (vector-ref time 4)            ;; month
-                (+ 1900 (vector-ref time 5)))) ;; year
+  (let ((ret (zipper-new* z filename
+                          (case method
+                            ((deflated) (foreign-value "Z_DEFLATED" int))
+                            ((none #f)  0)
+                            (else (error "method must be 'deflated or #f (none)" method)))
+                          (case level ;; numeric value 0-9 (Z_DEFAULT_COMPRESSION = -1)
+                            ((#f) (foreign-value "Z_DEFAULT_COMPRESSION" int))
+                            (else level))
+                          (vector-ref time 0)             ;; sec
+                          (vector-ref time 1)             ;; min
+                          (vector-ref time 2)             ;; hour
+                          (vector-ref time 3)             ;; mday
+                          (vector-ref time 4)             ;; month
+                          (+ 1900 (vector-ref time 5))))) ;; year
+    (if (zero? ret)
+        (zipper-port z)
+        (error "zipper-new failed" ret))))
 
 (define (zipper-write z str #!optional (len (number-of-bytes str)))
   ((foreign-lambda int "zipWriteInFileInZip" zipFile scheme-pointer unsigned-int) z str len))

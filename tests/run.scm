@@ -134,6 +134,7 @@
 
 (import test (android minizip)
         (only (chicken file) delete-file*)
+        (only (chicken port) with-output-to-port)
         (only (chicken io) read-string))
 
 (test-group
@@ -143,7 +144,8 @@
  (delete-file* filename)
 
  (let ((z (zipper filename)))
-   (zipper-new z "a.txt") (zipper-write z "file a\n")
+   (with-output-to-port (zipper-new z "a.txt")
+     (lambda () (display "file a\n")))
    (zipper-new z "b.txt" #:method 'none) (zipper-write z "file b\n")
    (zip-close z))
 
