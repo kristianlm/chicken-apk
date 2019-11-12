@@ -117,7 +117,7 @@ int apk_align(char* funaligned, char* faligned) {
   static const int ZIP_ALIGNMENT = 4;
   unzFile unaligned = unzOpen(funaligned);
   zipFile aligned = zipOpen(faligned, APPEND_STATUS_CREATE);
-  fprintf(stderr, "########## aligning %s => %s \n", funaligned, faligned);
+  // fprintf(stderr, "########## aligning %s => %s \n", funaligned, faligned);
   int bias = 0;
   int ret = unzGoToFirstFile(unaligned);
   
@@ -130,7 +130,7 @@ int apk_align(char* funaligned, char* faligned) {
     ret = unzGetCurrentFileInfo(unaligned, &info, fname, 16384, extra, 16384 - ZIP_ALIGNMENT, NULL, 0);
     int64_t size = info.compressed_size;
 
-    fprintf(stderr, "aligning '%s' (%d bytes)\n", fname, size);
+    // fprintf(stderr, "aligning '%s' (%d bytes)\n", fname, size);
     
     char* data = malloc(size);
 
