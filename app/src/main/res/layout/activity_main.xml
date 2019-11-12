@@ -1,12 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ff202020">
 
-    <TextView
-        android:id="@+id/sample_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-</LinearLayout>
+        <LinearLayout
+            android:id="@+id/inContainer"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0">
+
+            <EditText
+                android:id="@+id/in"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="15dp"
+                android:layout_weight="1"
+                android:inputType="textMultiLine|textNoSuggestions"
+                android:text=""
+                android:textColor="#ffa0a0a0"
+                android:textSize="14dp" />
+
+            <Button
+                android:id="@+id/snd"
+                android:layout_width="20pt"
+                android:layout_height="wrap_content"
+                android:background="#20ffffff"
+                android:onClick="onSend"
+                android:text="0>"
+                android:textColor="#ffa0a0a0" />
+        </LinearLayout>
+
+
+        <org.call_cc.template.sotest.AutoScroller
+            android:id="@+id/scroll"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/out"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:focusable="true"
+                    android:fontFamily="monospace"
+                    android:text=""
+                    android:textColor="#ffaaaaaa"
+                    android:textIsSelectable="true"
+                    android:textSize="10dp" />
+
+            </LinearLayout>
+        </org.call_cc.template.sotest.AutoScroller>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/glider"
+        android:layout_width="match_parent"
+        android:layout_height="15dp"
+        android:clickable="true"
+        android:background="#8EB378FF"
+        android:orientation="vertical"></FrameLayout>
+</FrameLayout>
