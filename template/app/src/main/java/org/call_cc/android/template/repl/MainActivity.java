@@ -220,6 +220,7 @@ public class MainActivity extends Activity {
     private int inputcount = 0;
     public void onSend(View view) {
         final String src = viewIn.getText().toString();
+        viewScroll.autoscroll = true;
         append("\u001b{{;#<" + inputcount++ + ">\u001b{#" + src + "\u001b}}\n");
         write(src.getBytes());
         write(new byte[]{'\n'}); // newline
