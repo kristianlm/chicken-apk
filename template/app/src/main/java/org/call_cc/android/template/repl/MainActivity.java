@@ -8,6 +8,7 @@ import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -183,8 +184,9 @@ public class MainActivity extends Activity {
         v.post(new Runnable() {
             @Override
             public void run() {
-                viewIn.setHeight(200);
-                v.setY(200);
+                int pixels = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 60, getResources().getDisplayMetrics());
+                viewIn.setHeight(pixels);
+                v.setY(pixels);
             }
         });
         thRead = new Thread(new Runnable() {
