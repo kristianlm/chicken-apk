@@ -166,7 +166,7 @@ public class MainActivity extends Activity {
         // note template.so loaded statically
         //loadLibraryMaybe("app");      // libapp.so is loaded by libtemplate.so
         loadLibraryMaybe("init");     // just in case you need something extra
-        loadLibraryMaybe("chicken");  // this should start first
+        loadLibraryMaybe("chicken");
 
         viewTxt = findViewById(R.id.out);
         viewIn  = findViewById(R.id.in);
