@@ -40,36 +40,11 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 viewTxt.append(s);
-
-                int gap = ((viewTxt.getBottom()) - viewScroll.getScrollY() - viewScroll.getHeight());
-                if(gap < viewTxt.getLineHeight()*6) { scrollDown(); }
                 // make things fancy:
                er.cont((SpannableStringBuilder) viewTxt.getText());
             }
         });
     }
-
-    private void scrollDown() {
-        //viewScroll.setSmoothScrollingEnabled(false);
-        //viewScroll.fullScroll(View.FOCUS_DOWN);
-    }
-//
-//    private SpannableString linkCode(final String title, final String code) {
-//        SpannableString txt = new SpannableString(title);
-//        txt.setSpan(new ClickableSpan() {
-//            @Override
-//            public void onClick(View widget) {
-//                //Toast.makeText(getApplicationContext(), "click click!", Toast.LENGTH_LONG).show();
-//                viewIn.setText(code);
-//            }
-//        }, 0, txt.length(), 0);
-//        return txt;
-//    }
-//
-//
-//    private SpannableString linkCode(final String code) {
-//        return linkCode(code, code);
-//    }
 
     public class EscapeReader {
 
@@ -251,7 +226,6 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 viewSnd.setText(inputcount-1 + ">");
-                scrollDown();
             }
         });
     }
