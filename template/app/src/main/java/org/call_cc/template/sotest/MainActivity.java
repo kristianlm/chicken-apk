@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -209,7 +210,8 @@ public class MainActivity extends Activity {
         v.post(new Runnable() {
             @Override
             public void run() {
-                v.setY(viewIn.getBottom());
+                viewIn.setHeight(200);
+                v.setY(200);
             }
         });
         thRead = new Thread(new Runnable() {
