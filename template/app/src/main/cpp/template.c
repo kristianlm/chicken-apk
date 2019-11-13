@@ -15,7 +15,7 @@ static int pfdi[2]; // input pipe
 
 /**
  * Called before all others threads start, so that
- * IO is ready when the entry point enters.
+ * IO is ready when we call launch.
  */
 JNIEXPORT void JNICALL
 Java_org_call_1cc_android_template_repl_MainActivity_iosetup(JNIEnv *env, jobject instance) {
