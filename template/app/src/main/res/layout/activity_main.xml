@@ -48,7 +48,7 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
 
-                <TextView
+                <org.call_cc.android.template.repl.OutputTextView
                     android:id="@+id/out"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
