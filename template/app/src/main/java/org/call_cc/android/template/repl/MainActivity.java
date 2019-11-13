@@ -180,7 +180,7 @@ public class MainActivity extends Activity {
         });
 
 
-        viewIn.setText("(import srfi-18 nrepl)\n(thread-start! (lambda () (nrepl 8888)))");
+        viewIn.setText("(print \"hello world\")");
         v.post(new Runnable() {
             @Override
             public void run() {
