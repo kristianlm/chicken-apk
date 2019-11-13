@@ -101,12 +101,11 @@ public class AutoScrollView extends ScrollView {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         if(autoscroll) {
             scrollToBottom();
         }
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
-
 
     @Override
     protected void onDraw(Canvas canvas) {
