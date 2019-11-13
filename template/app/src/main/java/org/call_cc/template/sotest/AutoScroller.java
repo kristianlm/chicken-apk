@@ -34,14 +34,15 @@ public class AutoScroller extends ScrollView {
     }
 
     ACircle circleTop = new ACircle() {
-        @Override int r() {return (getWidth()>getHeight()?getHeight():getWidth())/10;}
-        @Override int x() {return r();}
-        @Override int y() {return r();}
+        @Override int r() {return getWidth()/10;}
+        @Override int x() {return getWidth()-r();}
+        @Override int y() {return getHeight()/2-r();}
     };
     ACircle circleBottom = new ACircle() {
         @Override int r() {return circleTop.r(); }
-        @Override int x() {return r();}
-        @Override int y() {return getHeight()-r();}
+        @Override int x() {return circleTop.x();}
+        @Override int y() {return getHeight()/2+r();}
+        //@Override public void draw(Canvas canvas) { super.draw(canvas);  canvas.drawText("↓", getScrollX()+x(), getScrollY()+y(), p); /* TODO: label buttons nicely */}
     };
 
     public AutoScroller(Context context) {
@@ -59,6 +60,9 @@ public class AutoScroller extends ScrollView {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 
+    public int colorCircleUp   = 0x40FFFFFF;
+    public int colorCircleDown = 0x8EB378FF;
+
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         autoscroll = false;
@@ -70,9 +74,9 @@ public class AutoScroller extends ScrollView {
             if(ev.getAction() == MotionEvent.ACTION_UP) {
                 scrollToTop();
             }
-            circleTop.p.setColor(0x40FF00FF);
+            circleTop.p.setColor(colorCircleDown);
         } else {
-            circleTop.p.setColor(0x40FFFFFF);
+            circleTop.p.setColor(colorCircleUp);
         }
 
         if(circleBottom.inside((int)ev.getX(), (int)ev.getY())) {
@@ -80,9 +84,9 @@ public class AutoScroller extends ScrollView {
                 scrollToBottom();
                 autoscroll = true;
             }
-            circleBottom.p.setColor(0x40FF00FF);
+            circleBottom.p.setColor(colorCircleDown);
         } else {
-            circleBottom.p.setColor(0x40FFFFFF);
+            circleBottom.p.setColor(colorCircleUp);
         }
         return super.onTouchEvent(ev);
     }
