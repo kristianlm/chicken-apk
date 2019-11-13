@@ -216,7 +216,9 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 while(true) {
-                    append(new SpannableString(new String(read())));
+                    byte[] bytes = read();
+                    if(bytes == null) break;
+                    append(new SpannableString(new String(bytes)));
                 }
             }
         });
