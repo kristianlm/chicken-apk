@@ -13,8 +13,13 @@ since this requires the Android SDK and NDK and this can be painful.
 ## Building
 
 ```
-$ cat local.properties # replace with your paths
+$ cat local.properties # replace with your own paths
 ndk.dir=/home/user/opt/android/sdk/ndk-bundle
 sdk.dir=/home/user/opt/android/sdk
-$ ./gradlew assembleDebug # this Should Just Work™
+$ ./gradlew assembleDebug # this should Just Work™
 ```
+
+The APK from this template is functional, and you can launch it from
+Android Studio for somewhat faster iterations. Note that `Run` does
+not produce apk files and you'll have to do `Build->Make Project`
+(which runs gradle) if you want to produce `.apk` output files.
