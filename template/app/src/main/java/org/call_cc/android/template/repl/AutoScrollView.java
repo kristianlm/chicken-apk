@@ -7,7 +7,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.ScrollView;
 
-public class AutoScroller extends ScrollView {
+public class AutoScrollView extends ScrollView {
     private static final String TAG = "MyScroll";
     boolean scrolling = false;
     boolean autoscroll = true;
@@ -44,18 +44,18 @@ public class AutoScroller extends ScrollView {
         //@Override public void draw(Canvas canvas) { super.draw(canvas);  canvas.drawText("↓", getScrollX()+x(), getScrollY()+y(), p); /* TODO: label buttons nicely */}
     };
 
-    public AutoScroller(Context context) {
+    public AutoScrollView(Context context) {
         super(context);
     }
 
-    public AutoScroller(Context context, AttributeSet attrs) {
+    public AutoScrollView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
-    public AutoScroller(Context context, AttributeSet attrs, int defStyleAttr) {
+    public AutoScrollView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
     }
-    public AutoScroller(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public AutoScrollView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
 

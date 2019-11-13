@@ -12,7 +12,6 @@ import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.io.File;
@@ -26,7 +25,7 @@ public class MainActivity extends Activity {
     TextView viewTxt;
     TextView viewIn;
     Button viewSnd;
-    ScrollView viewScroll;
+    AutoScrollView viewScroll;
 
     static {
         // we need this first so that we can get access to all our JNI functions.
