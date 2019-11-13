@@ -37,7 +37,7 @@
         </LinearLayout>
 
 
-        <org.call_cc.template.sotest.AutoScroller
+        <org.call_cc.android.template.repl.AutoScroller
             android:id="@+id/scroll"
             android:layout_width="fill_parent"
             android:layout_height="match_parent"
@@ -60,7 +60,7 @@
                     android:textSize="10dp" />
 
             </LinearLayout>
-        </org.call_cc.template.sotest.AutoScroller>
+        </org.call_cc.android.template.repl.AutoScroller>
     </LinearLayout>
 
     <FrameLayout

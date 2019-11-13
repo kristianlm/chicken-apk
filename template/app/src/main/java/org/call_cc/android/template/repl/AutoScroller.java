@@ -1,10 +1,9 @@
-package org.call_cc.template.sotest;
+package org.call_cc.android.template.repl;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.ScrollView;
 

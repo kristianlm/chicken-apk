@@ -1,4 +1,4 @@
-package org.call_cc.template.sotest;
+package org.call_cc.android.template.repl;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -8,10 +8,8 @@ import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.util.Log;
-import android.view.DragEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;

@@ -18,7 +18,7 @@ static int pfdi[2]; // input pipe
  * IO is ready when the entry point enters.
  */
 JNIEXPORT void JNICALL
-Java_org_call_1cc_template_sotest_MainActivity_iosetup(JNIEnv *env, jobject instance) {
+Java_org_call_1cc_android_template_repl_MainActivity_iosetup(JNIEnv *env, jobject instance) {
     static int initialized = 0;
     if(initialized) return;
 
@@ -42,7 +42,7 @@ Java_org_call_1cc_template_sotest_MainActivity_iosetup(JNIEnv *env, jobject inst
 }
 
 JNIEXPORT jbyteArray JNICALL
-Java_org_call_1cc_template_sotest_MainActivity_read(JNIEnv *env, jclass type) {
+Java_org_call_1cc_android_template_repl_MainActivity_read(JNIEnv *env, jclass type) {
     ssize_t rdsz;
     jbyte buf[1024];
     if((rdsz = read(pfd[0], buf, sizeof buf - 1)) > 0) {
@@ -54,7 +54,7 @@ Java_org_call_1cc_template_sotest_MainActivity_read(JNIEnv *env, jclass type) {
 }
 
 JNIEXPORT void JNICALL
-Java_org_call_1cc_template_sotest_MainActivity_write(JNIEnv *env, jobject instance, jbyteArray x_) {
+Java_org_call_1cc_android_template_repl_MainActivity_write(JNIEnv *env, jobject instance, jbyteArray x_) {
     jbyte *x = (*env)->GetByteArrayElements(env, x_, NULL);
     jsize num_bytes = (*env)->GetArrayLength(env, x_);
 
@@ -68,7 +68,7 @@ Java_org_call_1cc_template_sotest_MainActivity_write(JNIEnv *env, jobject instan
  * Output to stdout is redirected to the app UI so it's almost like a terminal.
   */
 JNIEXPORT jint JNICALL
-Java_org_call_1cc_template_sotest_MainActivity_launch(JNIEnv *env, jobject instance,
+Java_org_call_1cc_android_template_repl_MainActivity_launch(JNIEnv *env, jobject instance,
                                                       jstring nativeLibraryDir_) {
     const char *nativeLibraryDir = (*env)->GetStringUTFChars(env, nativeLibraryDir_, 0);
     int ret = app(nativeLibraryDir);
