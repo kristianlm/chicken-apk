@@ -206,7 +206,7 @@ public class MainActivity extends Activity {
 
 
         viewIn.setText("(import srfi-18 nrepl)\n(thread-start! (lambda () (nrepl 8888)))");
-        runOnUiThread(new Runnable() {
+        v.post(new Runnable() {
             @Override
             public void run() {
                 v.setY(viewIn.getBottom());
