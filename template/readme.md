@@ -8,9 +8,14 @@ This builds an empty skeleton .apk file. It has:
 - A dummy native component (libapp.so) that says hello and things
 
 If you just want to play with Chicken, you don't have to build this
-since this requires the Android SDK and NDK and this can be painful.
+since this requires the Android SDK and NDK and this can be
+painful. The build `template.apk` is therefore committed in this repo
+for that purpose.
 
 ## Building
+
+This is a pretty straight-forward Android app, so the usual steps
+apply.
 
 ```
 $ cat local.properties # replace with your own paths
